@@ -175,10 +175,10 @@ class ParallelotopeRationalDomain private (favorAxis: Int) extends NumericalDoma
     val high: DenseVector[RationalExt])
       extends NumericalProperty[Property] {
 
-    require(low.length == A.rows)
-    require(low.length == A.cols)
-    require(Try(A \ DenseMatrix.eye[Rational](dimension)).isSuccess, s"The shape matrix ${A} is not invertible")
-    require(normalized)
+    //require(low.length == A.rows)
+    //require(low.length == A.cols)
+    //require(Try(A \ DenseMatrix.eye[Rational](dimension)).isSuccess, s"The shape matrix ${A} is not invertible")
+    //require(normalized)
 
     type Domain = ParallelotopeRationalDomain
 
@@ -199,7 +199,7 @@ class ParallelotopeRationalDomain private (favorAxis: Int) extends NumericalDoma
      * @throws $ILLEGAL
      */
     def widening(that: Property): Property = {
-      require(dimension == that.dimension)
+      //require(dimension == that.dimension)
       if (isEmpty)
         that
       else {
@@ -231,22 +231,26 @@ class ParallelotopeRationalDomain private (favorAxis: Int) extends NumericalDoma
      * @note @inheritdoc
      * @throws $ILLEGAL
      */
+    /*versione modificata da Gianluca */
     def narrowing(that: Property): Property = {
-      require(dimension == that.dimension)
+      //require(dimension == that.dimension)
       if (that.isEmpty) {
         that
-      } else {
+      } else if (this.isEmpty)
+        this
+      else {
         val thatRotated = that.rotate(A)
         val newlow = low.copy
         val newhigh = high.copy
         for (i <- 0 to dimension - 1) {
-          if (low(i).isInfinity) newlow(i) = thatRotated.low(i) else newlow(i) = newlow(i) min thatRotated.low(i)
-          if (high(i).isInfinity) newhigh(i) = thatRotated.high(i) else newhigh(i) = newhigh(i) max thatRotated.high(i)
+          if (low(i).isInfinity) newlow(i) = thatRotated.low(i)
+          if (high(i).isInfinity) newhigh(i) = thatRotated.high(i)
         }
+        
         new Property(false, newlow, A, newhigh)
       }
     }
-
+        
     /**
      * @inheritdoc
      * It is equivalent to `intersectionWeak`.
@@ -367,7 +371,7 @@ class ParallelotopeRationalDomain private (favorAxis: Int) extends NumericalDoma
         }
       }
 
-      require(dimension == that.dimension)
+      //require(dimension == that.dimension)
 
       // special cases
       if (isEmpty)
@@ -421,7 +425,7 @@ class ParallelotopeRationalDomain private (favorAxis: Int) extends NumericalDoma
      * @return the weak union of the two abstract objects.
      */
     def unionWeak(that: Property): Property = {
-      require(dimension == that.dimension)
+      //require(dimension == that.dimension)
       if (isEmpty)
         that.rotate(A)
       else if (that.isEmpty)
@@ -444,7 +448,7 @@ class ParallelotopeRationalDomain private (favorAxis: Int) extends NumericalDoma
      * @return the intersection of the two abstract objects.
      */
     def intersectionWeak(that: Property): Property = {
-      require(dimension == that.dimension)
+      //require(dimension == that.dimension)
       if (isEmpty)
         this
       else if (that.isEmpty)
@@ -469,7 +473,8 @@ class ParallelotopeRationalDomain private (favorAxis: Int) extends NumericalDoma
      * @throws $ILLEGAL
      */
     def linearAssignment(n: Int, lf: LinearForm): Property = {
-      require(n <= dimension && lf.dimension <= dimension)
+     // require(n <= dimension && lf.dimension <= dimension)
+
       val tcoeff = lf.homcoeffs
       val known = lf.known
       if (isEmpty)
@@ -528,7 +533,8 @@ class ParallelotopeRationalDomain private (favorAxis: Int) extends NumericalDoma
      * @throws ILLEGAL
      */
     def linearInequality(lf: LinearForm): Property = {
-      require(lf.dimension <= dimension)
+      //require(lf.dimension <= dimension)
+    
       if (isEmpty)
         this
       else if (dimension == 0)
@@ -615,7 +621,7 @@ class ParallelotopeRationalDomain private (favorAxis: Int) extends NumericalDoma
      * @throws $ILLEGAL
      */
     def nonDeterministicAssignment(n: Int): Property = {
-      require(n <= dimension)
+      //require(n <= dimension)
       if (isEmpty)
         this
       else {
@@ -690,6 +696,7 @@ class ParallelotopeRationalDomain private (favorAxis: Int) extends NumericalDoma
      */
     def delVariable(n: Int): Property = {
       def rowToSeq(M: DenseMatrix[Rational], i: Int, n: Int): Seq[Rational] =
+         
         for (j <- 0 until A.rows; if j != n) yield M(i, j)
 
       if (isEmpty)
@@ -700,6 +707,7 @@ class ParallelotopeRationalDomain private (favorAxis: Int) extends NumericalDoma
         val set2 = for (i <- 0 until dimension; if !forgot.high(i).isInfinity; if forgot.A(i, n) == Rational.zero) yield LinearForm(-forgot.high(i).value +: rowToSeq(forgot.A, i, n): _*)
         (set1 ++ set2).foldLeft(ParallelotopeRationalDomain.this.top(A.rows - 1)) { (p, lf) => p.linearInequality(lf) }
       }
+      
     }
 
     /**
@@ -781,7 +789,8 @@ class ParallelotopeRationalDomain private (favorAxis: Int) extends NumericalDoma
      * @throws IllegalArgumentException if `Aprime` is not square or has not the correct dimension.
      */
     def rotate(Aprime: DenseMatrix[Rational]): Property = {
-      require(dimension == Aprime.rows && dimension == Aprime.cols)
+      //require(dimension == Aprime.rows && dimension == Aprime.cols)
+      
       if (isEmpty)
         this
       else {

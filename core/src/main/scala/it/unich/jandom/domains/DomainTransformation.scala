@@ -21,6 +21,11 @@ package it.unich.jandom.domains
 import it.unich.jandom.domains.numerical._
 import it.unich.jandom.utils.breeze.RationalForBreeze._
 import it.unich.jandom.utils.numberext.RationalExt
+import it.unich.jandom.utils.numberext.DenseMatrix
+import it.unich.jandom.utils.numberext.DenseMatrix
+import it.unich.jandom.utils.numberext.DenseMatrix
+import it.unich.jandom.utils.numberext.Bounds
+import it.unich.jandom.utils.numberext.Bounds
 
 /**
  * This is the trait for domain transformations, i.e. maps from properties of one abstract domain to
@@ -80,6 +85,17 @@ object DomainTransformation {
         dst(newPar.low.toArray, newPar.high.toArray)
     }
   }
+  
+   implicit object ParallelotopeRationalFastToBoxRational extends DomainTransformation[ParallelotopeRationalDomainFast, BoxRationalDomain] {
+    import it.unich.jandom.utils.numberext.{ DenseMatrix }
+    def apply(src: ParallelotopeRationalDomainFast, dst: BoxRationalDomain): src.Property => dst.Property = { (x) =>
+      val newPar = x.rotate(DenseMatrix.eye(x.dimension))
+      if (newPar.isEmpty)
+        dst.bottom(newPar.dimension)
+      else
+        dst(newPar.low.data, newPar.high.data)
+    }
+  }
 
   implicit object BoxDoubleToParallelotope extends DomainTransformation[BoxDoubleDomain, ParallelotopeDomain] {
     import breeze.linalg.{ DenseMatrix, DenseVector }
@@ -102,6 +118,13 @@ object DomainTransformation {
     }
   }
 
+  implicit object BoxRationalToParallelotopeRationalFast extends DomainTransformation[BoxRationalDomain, ParallelotopeRationalDomainFast] {
+    import it.unich.jandom.utils.numberext.{ DenseMatrix,  Bounds }
+    def apply(src: BoxRationalDomain, dst: ParallelotopeRationalDomainFast): src.Property => dst.Property = { (x) =>     
+       dst(new Bounds(x.low.toArray), DenseMatrix.eye(x.dimension), new Bounds(x.high.toArray))
+       
+    }
+  }
   implicit object ParallelotopeToParallelotope extends DomainTransformation[ParallelotopeDomain, ParallelotopeDomain] {
     def apply(src: ParallelotopeDomain, dst: ParallelotopeDomain): src.Property => dst.Property = { (x) => new dst.Property(x.isEmpty, x.low, x.A, x.high) }
   }
@@ -110,6 +133,10 @@ object DomainTransformation {
     def apply(src: ParallelotopeRationalDomain, dst: ParallelotopeRationalDomain): src.Property => dst.Property = { (x) => new dst.Property(x.isEmpty, x.low, x.A, x.high) }
   }
 
+   implicit object ParallelotopeRationalFastParallelotopeRationalFast extends DomainTransformation[ParallelotopeRationalDomainFast, ParallelotopeRationalDomainFast] {
+    def apply(src: ParallelotopeRationalDomainFast, dst: ParallelotopeRationalDomainFast): src.Property => dst.Property = { (x) => new dst.Property(x.isEmpty, x.low, x.A, x.high) }
+  }
+  
   implicit object BoxDoubleToBoxDouble extends DomainTransformation[BoxDoubleDomain, BoxDoubleDomain] {
     def apply(src: BoxDoubleDomain, dst: BoxDoubleDomain): src.Property => dst.Property = { (x) => dst(x.low, x.high) }
   }

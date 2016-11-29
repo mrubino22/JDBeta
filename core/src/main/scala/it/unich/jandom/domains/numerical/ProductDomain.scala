@@ -52,7 +52,7 @@ class ProductDomain[D1 <: NumericalDomain, D2 <: NumericalDomain](val dom1: D1, 
    */
   class Property(val p1: dom1.Property, val p2: dom2.Property) extends NumericalProperty[Property] {
 
-    require(p1.dimension == p2.dimension)
+    //require(p1.dimension == p2.dimension)
 
     type Domain = ProductDomain.this.type
 
@@ -64,7 +64,9 @@ class ProductDomain[D1 <: NumericalDomain, D2 <: NumericalDomain](val dom1: D1, 
       else{
         val y1 = x1.intersection(d21(x2))
         val y2 = x2.intersection(d12(x1))
-        new Property(y1, y2)
+       // val y11=y1.intersection(d21(x2)).intersection(x1)
+       // val y21= y2.intersection(d12(x1)).intersection(x2)
+         new Property(y1, y2)
       }
     }
 

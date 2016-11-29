@@ -32,7 +32,7 @@ import it.unich.scalafix.finite.FiniteFixpointSolver
 import it.unich.scalafix.FixpointSolver._
 
 class LTSSuite extends FunSuite {
-  val dom = BoxDoubleDomain()
+ val dom = BoxDoubleDomain()
 
   implicit val scalafixDomain = dom.ScalaFixDomain
   val wideningBox = { (x: dom.Property, y: dom.Property) => x widening y }

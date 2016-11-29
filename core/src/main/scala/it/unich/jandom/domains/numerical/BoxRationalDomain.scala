@@ -46,7 +46,7 @@ class BoxRationalDomain private extends NumericalDomain {
    */
 
   final class Property(val low: Array[RationalExt], val high: Array[RationalExt], val isEmpty: Boolean) extends NumericalProperty[Property] {
-    require(normalized, s"The parameters low: ${low.mkString(",")}, high: ${high.mkString(",")} and isEmpty: ${isEmpty} are not normalized")
+    //require(normalized, s"The parameters low: ${low.mkString(",")}, high: ${high.mkString(",")} and isEmpty: ${isEmpty} are not normalized")
 
     type Domain = BoxRationalDomain
 
@@ -90,7 +90,7 @@ class BoxRationalDomain private extends NumericalDomain {
      * @throws $ILLEGAL
      */
     def union(that: Property): Property = {
-      require(dimension == that.dimension)
+      //require(dimension == that.dimension)
       val newlow = (this.low, that.low).zipped.map(_ min _)
       val newhigh = (this.high, that.high).zipped.map(_ max _)
       new Property(newlow, newhigh, isEmpty && that.isEmpty)
@@ -102,7 +102,7 @@ class BoxRationalDomain private extends NumericalDomain {
      * @throws $ILLEGAL
      */
     def intersection(that: Property): Property = {
-      require(dimension == that.dimension)
+     // require(dimension == that.dimension)
       val newlow = (this.low, that.low).zipped.map(_ max _)
       val newhigh = (this.high, that.high).zipped.map(_ min _)
       BoxRationalDomain.this(newlow, newhigh)
@@ -114,7 +114,7 @@ class BoxRationalDomain private extends NumericalDomain {
      * @throws $ILLEGAL
      */
     def widening(that: Property) = {
-      require(dimension == that.dimension)
+     // require(dimension == that.dimension)
       val newlow = (low, that.low).zipped.map((l1, l2) => if (l1 == RationalExt.PositiveInfinity) l2 else if (l1 <= l2) l1 else RationalExt.NegativeInfinity)
       val newhigh = (high, that.high).zipped.map((l1, l2) => if (l1 == RationalExt.NegativeInfinity) l2 else if (l1 >= l2) l1 else RationalExt.PositiveInfinity)
       new Property(newlow, newhigh, isEmpty && that.isEmpty)
@@ -126,7 +126,7 @@ class BoxRationalDomain private extends NumericalDomain {
      * @throws $ILLEGAL
      */
     def narrowing(that: Property) = {
-      require(dimension == that.dimension)
+      //require(dimension == that.dimension)
       if (that.isEmpty) {
         that
       } else {
@@ -143,7 +143,7 @@ class BoxRationalDomain private extends NumericalDomain {
      * of the linear form over the box.
      */
     private def linearEvaluation(lf: LinearForm): (RationalExt, RationalExt) = {
-      require(lf.dimension <= dimension)
+      //require(lf.dimension <= dimension)
       var newlow = RationalExt(lf.known)
       var newhigh = RationalExt(lf.known)
       val homcoeffs = lf.homcoeffs
@@ -180,7 +180,7 @@ class BoxRationalDomain private extends NumericalDomain {
      * @return the coordinates of the point which minimizes the linear form.
      */
     private def linearArgmin(lf: LinearForm): Seq[RationalExt] = {
-      require(lf.dimension <= dimension)
+      //require(lf.dimension <= dimension)
       (lf.homcoeffs,low,high).zipped.map{(c, l, h) => if (c > Rational.zero) l else h }
     }
 
@@ -191,7 +191,7 @@ class BoxRationalDomain private extends NumericalDomain {
      * @return the coordinates of the point which maximizes the linear form
      */
     private def linearArgmax(lf: LinearForm): Seq[RationalExt] = {
-      require(lf.dimension <= dimension)
+      //require(lf.dimension <= dimension)
       (lf.homcoeffs,low,high).zipped.map{(c, l, h) => if (c < Rational.zero) l else h }
     }
 
@@ -201,7 +201,7 @@ class BoxRationalDomain private extends NumericalDomain {
      * @throws $ILLEGAL
      */
     def nonDeterministicAssignment(n: Int): Property = {
-      require(n < low.length && n >= 0)
+      //require(n < low.length && n >= 0)
       if (isEmpty)
         this
       else
@@ -215,7 +215,7 @@ class BoxRationalDomain private extends NumericalDomain {
      * @throws $ILLEGAL
      */
     def linearAssignment(n: Int, lf: LinearForm): Property = {
-      require(n < low.length && n >= 0 && lf.dimension <= dimension)
+      //require(n < low.length && n >= 0 && lf.dimension <= dimension)
       if (isEmpty)
         this
       else {
@@ -232,7 +232,7 @@ class BoxRationalDomain private extends NumericalDomain {
      * @throws $ILLEGAL
      */
     def linearInequality(lf: LinearForm): Property = {
-      require(lf.dimension <= dimension)
+      //require(lf.dimension <= dimension)
 
       // if the box is empty the result is empty
       if (isEmpty)
@@ -314,7 +314,7 @@ class BoxRationalDomain private extends NumericalDomain {
      * @throws $ILLEGAL
      */
     def delVariable(n: Int): Property = {
-      require(n < low.length && n >= 0)
+      //require(n < low.length && n >= 0)
       val newlow = new Array[RationalExt](dimension - 1)
       val newhigh = new Array[RationalExt](dimension - 1)
       Array.copy(low, 0, newlow, 0, n)
@@ -331,9 +331,9 @@ class BoxRationalDomain private extends NumericalDomain {
      * @throws IllegalArgumentException if parameters are not correct (but we do not check injectivity of `rho`)
      */
     def mapVariables(rho: Seq[Int]) = {
-      require(rho.length == dimension)
+      //require(rho.length == dimension)
       val newdim = rho.count(_ >= 0)
-      require(rho forall { i => i >= -1 && i < newdim })
+      //require(rho forall { i => i >= -1 && i < newdim })
       // we do not check injectivity
       val newlow = new Array[RationalExt](newdim)
       val newhigh = new Array[RationalExt](newdim)
@@ -349,7 +349,7 @@ class BoxRationalDomain private extends NumericalDomain {
      * @throws $ILLEGAL
      */
     def mkString(vars: Seq[String]): String = {
-      require(vars.length >= dimension)
+      //require(vars.length >= dimension)
       if (isEmpty)
         "empty"
       else {
@@ -374,7 +374,7 @@ class BoxRationalDomain private extends NumericalDomain {
 
     def tryCompareTo[B >: Property](other: B)(implicit arg0: (B) => PartiallyOrdered[B]): Option[Int] = other match {
       case other: Property =>
-        require(dimension == other.dimension)
+        //require(dimension == other.dimension)
         (isEmpty, other.isEmpty) match {
           case (true, true) => Option(0)
           case (false, true) => Option(1)
@@ -406,7 +406,7 @@ class BoxRationalDomain private extends NumericalDomain {
    * @throws $ILLEGAL
    */
   def apply(low: Array[RationalExt], high: Array[RationalExt]): Property = {
-    require(low.length == high.length)
+    //require(low.length == high.length)
     if ((low,high).zipped.exists(_ > _ ))
       bottom(low.length)
     else

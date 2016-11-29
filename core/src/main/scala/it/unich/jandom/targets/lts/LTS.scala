@@ -19,11 +19,18 @@
 package it.unich.jandom.targets.lts
 
 import it.unich.jandom.domains.DimensionFiberedProperty
+import scala.collection.mutable
 import it.unich.jandom.domains.numerical.NumericalDomain
 import it.unich.jandom.targets._
 import it.unich.jandom.utils.Relation
 import it.unich.scalafix.finite.GraphEquationSystem
 import it.unich.scalafix.lattice.Domain
+import it.unich.scalafix.finite.FiniteEquationSystem
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Callable
+
+
 
 /**
  * The class for the target of Linear Transition Systems.
@@ -38,7 +45,6 @@ case class LTS(val name: String, val locations: IndexedSeq[Location], val transi
 
   type ProgramPoint = Location
   type DomainBase = NumericalDomain
-
   // fill locations with their numerical index.. this is used to speed up execution.
   locations.zipWithIndex.foreach { case (loc, index) => loc.id = index }
 
@@ -101,7 +107,6 @@ case class LTS(val name: String, val locations: IndexedSeq[Location], val transi
    */
   def toDot: String = {
     import org.apache.commons.lang3.StringEscapeUtils
-
     val builder = new StringBuilder()
     builder ++= "digraph {\n"
     val initState = regions find { _.name == "init" } flatMap { _.state }
@@ -114,12 +119,63 @@ case class LTS(val name: String, val locations: IndexedSeq[Location], val transi
     builder.toString
   }
 
+    /**
+   * TEST Converts the LTS into a graph in the language.
+   
+  def toDot2: List[List[String]]= {
+    import org.apache.commons.lang3.StringEscapeUtils
+    val builder = new StringBuilder()
+     type Vertex = String
+  type GraphMap = Map[String,List[String]]
+     var graf:GraphMap = Map()
+
+   
+    val initState = regions find { _.name == "init" } flatMap { _.state }
+     
+   // if (initState.isDefined)
+    val  start = StringEscapeUtils.escapeJava(initState.get.name).toString()
+    var inizio =""
+    var lista =List[String]()
+    for (t <- transitions) {
+      val s1=StringEscapeUtils.escapeJava(t.start.name).toString()
+      val s2=StringEscapeUtils.escapeJava(t.end.name).toString()
+      if(inizio.isEmpty()) {
+        inizio=s1
+        println("A")
+      }
+      if(inizio.equals(s1)){
+        //lista.addString(s2)
+        lista = s2 :: lista
+       // println("Inizio"+lista)
+      }
+if(!inizio.equals(s1)){
+        graf += (inizio ->lista)
+          //g = s2 :: lista
+      
+      lista=List[String]()
+           lista = s2 :: lista
+           inizio=s1
+      }
+      
+    //g.+((s1,s2))
+     // builder ++= s"""  "${StringEscapeUtils.escapeJava(t.start.name)}" -> "${ StringEscapeUtils.escapeJava(t.end.name)}" [label="${StringEscapeUtils.escapeJava(t.name)}"]\n"""
+    }
+        graf += (inizio ->lista)
+    builder ++= "}\n"
+    builder.toString
+    var sGraph = new Graph[String]
+       println("graf "+graf)
+       sGraph.g =graf
+   sGraph.BFS(start)
+   null
+  }
+   FINE TEST */
   /**
    * Converts an LTS into an equation system, given a numerical domain.
    */
   def toEQS(dom: NumericalDomain): GraphEquationSystem[Location, dom.Property, Either[Transition, Location]] = {
     type Edge = Either[Transition, Location]
-
+   
     implicit val scalafixDomain = dom.ScalaFixDomain
 
     // build an empty property.. it is used several times, so we speed execution
@@ -137,9 +193,11 @@ case class LTS(val name: String, val locations: IndexedSeq[Location], val transi
           }
         }, locations)
     }
+    
+  //println("-->"+inputlocs.toSet);
     val edges: Set[Edge] = ((transitions map { Left(_) }) ++ (inputlocs map { Right(_) })).toSet
     GraphEquationSystem[Location, dom.Property, Edge](
-      unknowns = locations,
+      unknowns =locations,
       inputUnknowns = inputlocs.toSet,
       edgeAction = { (rho: Location => dom.Property) =>
         e: Either[Transition, Location] =>
@@ -155,9 +213,16 @@ case class LTS(val name: String, val locations: IndexedSeq[Location], val transi
       initial = startrho)
   }
 
+
+  
+
+   
+    
+    
   override def getAnnotation[Property] = new LTSAnnotation[Property]
 
   def analyze(params: Parameters): Annotation[ProgramPoint, params.Property] = {
+    
     // build widening and narrowing for each program point
     val widenings = locations map { l =>
       if (params.wideningLocation == WideningNarrowingLocation.All ||
@@ -224,7 +289,8 @@ case class LTS(val name: String, val locations: IndexedSeq[Location], val transi
         val locid = workList.dequeue()
         val loc = locations(locid)
         val w = widenings(locid)
-        val propnew = for (t <- loc.incoming) yield t.analyze(current(t.start.id))
+
+      val propnew = for (t <- loc.incoming) yield t.analyze(current(t.start.id))
         val unionednew = propnew.fold(empty)(_ union _)
         params.log(s"Node: ${loc.name} Oldvalue: ${current(loc.id).mkString(env.variables)} Newinput: ${unionednew.mkString(env.variables)}")
         val newvalue = if (w.isEmpty) unionednew else w.get(current(locid), unionednew)
@@ -267,3 +333,4 @@ case class LTS(val name: String, val locations: IndexedSeq[Location], val transi
   override def toString = name
 
 }
+

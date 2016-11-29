@@ -20,6 +20,7 @@ package it.unich.jandom.widenings
 
 import it.unich.jandom.domains.AbstractProperty
 
+
 /**
  * Delayed widening.
  * @param widening the original widening
